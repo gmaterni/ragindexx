@@ -1,0 +1,15 @@
+{
+  "name": "ragindex",
+  "main": "src/index.js",
+  "compatibility_date": "2025-02-13",
+  "observability": {
+    "enabled": true
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ragindex_db",
+      "database_id": "f3a6ec06-cd83-47d3-a83d-3ba0a2750457"
+    }
+  ]
+}

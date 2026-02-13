@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" href="data:,">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAGINDEX - Home</title>
+    <style>
+        body {
+            background-color: #121212;
+            color: #f0f0f0;
+            font-family: system-ui, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+        }
+        h1 { color: #4a9eff; margin-bottom: 10px; }
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            display: inline-block;
+            margin-right: 8px;
+            background-color: #555;
+        }
+        .status-active { background-color: #00c853; box-shadow: 0 0 8px #00c853; }
+        .log-status { font-size: 0.8rem; color: #a0a0a0; margin-bottom: 20px; }
+        .nav { display: flex; gap: 20px; }
+        .card {
+            background: #1e1e1e;
+            padding: 24px;
+            border-radius: 12px;
+            border: 1px solid #404040;
+            text-decoration: none;
+            color: white;
+            width: 220px;
+            text-align: center;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: #4a9eff;
+        }
+        .card h2 { margin: 0 0 10px 0; font-size: 1.2rem; }
+        .card p { font-size: 0.9rem; color: #a0a0a0; margin: 0; }
+    </style>
+</head>
+<body>
+    <div style="position: absolute; top: 10px; right: 10px; background: #2a2a2a; padding: 10px; border-radius: 8px; border: 1px solid #444; font-size: 0.8rem;">
+        <label><input type="radio" name="env" value="local" checked> Locale</label>
+        <label style="margin-left: 10px;"><input type="radio" name="env" value="remote"> Remoto</label>
+    </div>
+
+    <h1>RAGINDEX System</h1>
+    <div class="log-status">
+        <span id="status-dot" class="status-dot"></span>
+        <span id="status-text">Registrazione accesso...</span>
+    </div>
+
+    <div class="nav">
+        <a href="ragindex-cli/index.html" target="_blank" rel="noopener noreferrer" class="card">
+            <h2>Test Client</h2>
+            <p>Invia eventi e monitora log veloci</p>
+        </a>
+        <a href="ragindex-db/index.html" target="_blank" rel="noopener noreferrer" class="card">
+            <h2>DB Explorer</h2>
+            <p>Analisi SQL professionale</p>
+        </a>
+    </div>
+
+    <script type="module">
+        "use strict";
+
+        /**
+         * Gestisce la configurazione dell'ambiente.
+         */
+        const getWorkerUrl = function() {
+            const env = localStorage.getItem("ragindex_env") || "local";
+            const remoteBase = "https://ragindex.tuo-subdominio.workers.dev"; // Modifica solo qui
+            
+            // Sincronizza UI
+            const radio = document.querySelector(`input[name="env"][value="${env}"]`);
+            if (radio) radio.checked = true;
+
+            return env === "local" ? "http://localhost:8788" : remoteBase;
+        };
+
+        // Salvataggio impostazioni
+        document.querySelectorAll('input[name="env"]').forEach(r => {
+            r.addEventListener("change", (e) => {
+                localStorage.setItem("ragindex_env", e.target.value);
+                location.reload();
+            });
+        });
+
+        /**
+         * Logga l'apertura della pagina nel sistema analytics.
+         */
+        const logEntryAsync = async function() {
+            const WORKER_URL = getWorkerUrl();
+            const statusDot = document.getElementById("status-dot");
+            const statusText = document.getElementById("status-text");
+
+            if (!WORKER_URL && localStorage.getItem("ragindex_env") === "remote") {
+                statusText.textContent = "Configura URL remoto!";
+                statusText.style.color = "#ff9800";
+                return;
+            }
+
+            // 1. Recupera o genera User ID
+            let userId = localStorage.getItem("ragindex_user_id");
+            if (!userId) {
+                userId = crypto.randomUUID();
+                localStorage.setItem("ragindex_user_id", userId);
+            }
+
+            // 2. Prepara il payload (appName: ragindex, actionName: open)
+            const payload = {
+                appName: "ragindex",
+                actionName: "open",
+                userId: userId,
+                userAgent: navigator.userAgent,
+                language: navigator.language,
+                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+                referrer: document.referrer,
+                timestamp: Math.floor(Date.now() / 1000)
+            };
+
+            let success = false;
+
+            try {
+                const response = await fetch(`${WORKER_URL}/api/analytics`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify(payload)
+                });
+
+                if (response.ok) {
+                    success = true;
+                }
+            } catch (error) {
+                console.error("Errore durante il logging dell'apertura:", error);
+                success = false;
+            }
+
+            // 3. Aggiorna UI stato
+            if (success) {
+                statusDot.classList.add("status-active");
+                statusText.textContent = "Accesso registrato";
+            } else {
+                statusText.textContent = "Errore connessione backend";
+                statusText.style.color = "#ff5252";
+            }
+
+            return success;
+        };
+
+        // Esegue al caricamento
+        document.addEventListener("DOMContentLoaded", logEntryAsync);
+    </script>
+</body>
+</html>

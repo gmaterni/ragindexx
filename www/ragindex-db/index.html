@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RAGINDEX - DB Explorer</title>
+    <style>
+        :root {
+            --bg-primary: #121212;
+            --bg-secondary: #1e1e1e;
+            --text-primary: #f0f0f0;
+            --text-secondary: #a0a0a0;
+            --accent: #00c853;
+            --accent-hover: #21e670;
+            --error: #b71c1c;
+            --border: #404040;
+            --sidebar-width: 250px;
+        }
+
+        body {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            font-family: system-ui, -apple-system, 'Segoe UI', sans-serif;
+            font-size: 14px;
+            line-height: 1.6;
+            margin: 0;
+            display: flex;
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        /* Sidebar per colonne e query predefinite */
+        aside {
+            width: var(--sidebar-width);
+            background-color: var(--bg-secondary);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 16px;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        /* Main Content */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            padding: 24px;
+        }
+
+        h1, h2 {
+            margin-top: 0;
+            color: var(--accent);
+            font-size: 20px;
+        }
+
+        .section-title {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-secondary);
+            margin: 24px 0 12px 0;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 4px;
+        }
+
+        /* SQL Editor Area */
+        .editor-container {
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 24px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        textarea {
+            width: 100%;
+            height: 120px;
+            background-color: #000;
+            color: #00ff00;
+            font-family: 'Courier New', Courier, monospace;
+            font-size: 16px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            resize: vertical;
+            box-sizing: border-box;
+            margin-bottom: 12px;
+        }
+
+        .button-bar {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+
+        button {
+            padding: 10px 20px;
+            background-color: var(--accent);
+            color: #000;
+            border: none;
+            border-radius: 6px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--accent-hover);
+        }
+
+        button.secondary {
+            background-color: var(--bg-primary);
+            color: var(--text-primary);
+            border: 1px solid var(--border);
+        }
+
+        /* Results Table */
+        .results-container {
+            flex: 1;
+            overflow: auto;
+            background-color: var(--bg-secondary);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            white-space: nowrap;
+        }
+
+        th {
+            position: sticky;
+            top: 0;
+            background-color: #333;
+            color: var(--text-primary);
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid var(--border);
+            z-index: 10;
+        }
+
+        td {
+            padding: 10px 12px;
+            border-bottom: 1px solid var(--border);
+            color: var(--text-secondary);
+        }
+
+        tr:nth-child(even) {
+            background-color: rgba(255, 255, 255, 0.02);
+        }
+
+        tr:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+        }
+
+        /* Sidebar items */
+        .preset-query {
+            background: none;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            text-align: left;
+            padding: 8px;
+            margin-bottom: 8px;
+            font-size: 13px;
+            width: 100%;
+            border-radius: 4px;
+        }
+
+        .preset-query:hover {
+            background-color: rgba(255,255,255,0.1);
+        }
+
+        .column-toggle {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+        }
+
+        .column-toggle input {
+            cursor: pointer;
+        }
+
+        #error-display {
+            color: #ff5252;
+            background-color: rgba(255, 82, 82, 0.1);
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 16px;
+            display: none;
+            border: 1px solid #ff5252;
+        }
+
+        .env-switch {
+            font-size: 12px;
+            margin-top: auto;
+            padding-top: 16px;
+            border-top: 1px solid var(--border);
+        }
+    </style>
+</head>
+<body>
+
+    <aside>
+        <h2>RAGINDEX DB</h2>
+        
+        <div class="section-title">Query Predefinite</div>
+        <button class="preset-query" data-sql="SELECT * FROM analytics ORDER BY created_at DESC LIMIT 100">Ultimi 100 eventi</button>
+        <button class="preset-query" data-sql="SELECT app_name, COUNT(*) as count FROM analytics GROUP BY app_name">Conteggio per app</button>
+        <button class="preset-query" data-sql="SELECT action_name, COUNT(*) as count FROM analytics GROUP BY action_name ORDER BY count DESC LIMIT 10">Top 10 azioni</button>
+        <button class="preset-query" data-sql="SELECT * FROM analytics WHERE created_at > datetime('now', '-7 days')">Ultimi 7 giorni</button>
+
+        <div class="section-title">Visibilità Colonne</div>
+        <div id="columns-list">
+            <!-- Popolato dinamicamente -->
+        </div>
+
+        <div class="section-title">Azioni Pericolose</div>
+        <button id="danger-clear-btn" style="background-color: var(--error); color: white; width: 100%;">Svuota Database</button>
+
+        <div class="env-switch">
+            <label>
+                <input type="checkbox" id="env-toggle"> Produzione
+            </label>
+            <div style="margin-top: 8px; opacity: 0.6;">
+                URL: <span id="current-url">http://localhost:8788</span>
+            </div>
+        </div>
+    </aside>
+
+    <main>
+        <h1>SQL Explorer</h1>
+
+        <div id="error-display"></div>
+
+        <section class="editor-container">
+            <textarea id="sql-editor" spellcheck="false">SELECT * FROM analytics ORDER BY created_at DESC LIMIT 50</textarea>
+            <div class="button-bar">
+                <button id="execute-btn">Esegui Query (Ctrl+Enter)</button>
+                <button id="clear-btn" class="secondary">Pulisci Risultati</button>
+            </div>
+        </section>
+
+        <div class="results-container">
+            <table id="results-table">
+                <thead id="results-head"></thead>
+                <tbody id="results-body"></tbody>
+            </table>
+        </div>
+    </main>
+
+    <script src="js/query.js" type="module"></script>
+    <script src="js/table.js" type="module"></script>
+    <script src="js/app.js" type="module"></script>
+</body>
+</html>
