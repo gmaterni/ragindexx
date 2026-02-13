@@ -30,3 +30,5 @@ cd ragindex
 wrangler secret put CLEAR_KEY
 
 2. Valore atteso per operazioni DELETE: Header `X-Clear-Key`.
+
+https://41e9bd82.ragindexx.pages.dev
