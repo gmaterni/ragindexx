@@ -1,40 +1,39 @@
 "use strict";
 
 /**
+ * Stato globale del modulo Query (Singleton)
+ */
+let _globalConfig = {
+    workerUrl: "http://localhost:8788"
+};
+
+/**
  * Gestore dell'esecuzione delle query SQL.
  */
-export const UaQuery = function(config = {}) {
+export const UaQuery = {
     
-    // 1. STATO
-    let _workerUrl = config.workerUrl || "http://localhost:8788";
-
-    // 2. FUNZIONI PUBBLICHE
-
     /**
-     * Aggiorna l'URL del worker.
+     * Inizializza la configurazione globale per le query.
      */
-    const setWorkerUrl = function(url) {
-        _workerUrl = url;
-    };
+    init: function(config = {}) {
+        if (config.workerUrl) {
+            _globalConfig.workerUrl = config.workerUrl;
+        }
+    },
 
     /**
      * Esegue una query SQL SELECT tramite il backend.
      */
-    const executeAsync = async function(sql) {
-        // Fail Fast
+    executeAsync: async function(sql) {
         if (!sql) {
-            console.error("UaQuery.executeAsync: SQL mancante");
+            console.error("UaQuery: SQL mancante");
             return null;
         }
 
-        let result = null;
-
         try {
-            const response = await fetch(`${_workerUrl}/api/query`, {
+            const response = await fetch(`${_globalConfig.workerUrl}/api/query`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ sql: sql })
             });
 
@@ -44,19 +43,10 @@ export const UaQuery = function(config = {}) {
                 throw new Error(data.error || "Errore durante l'esecuzione della query");
             }
 
-            result = data;
+            return data;
         } catch (error) {
             console.error("UaQuery.executeAsync:", error);
-            throw error; // Rilanciamo l'errore per gestirlo nella UI
+            throw error;
         }
-
-        return result;
-    };
-
-    // 3. API PUBBLICA
-    const api = {
-        executeAsync: executeAsync,
-        setWorkerUrl: setWorkerUrl
-    };
-    return api;
+    }
 };

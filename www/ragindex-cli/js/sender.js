@@ -1,94 +1,82 @@
 "use strict";
 
 /**
- * Gestore dell'invio degli eventi analytics.
- * Si occupa di raccogliere metadati e inviare dati al backend.
+ * Stato globale del modulo (Singleton)
  */
-export const UaSender = function(config = {}) {
-    
-    // 1. STATO PRIVATO
-    const _workerUrl = config.workerUrl || "http://localhost:8788";
-    const _storageKey = "ragindex_user_id";
-    
-    // 2. FUNZIONI PRIVATE
+let _globalConfig = {
+    workerUrl: "http://localhost:8788", // Default locale
+    isInitialized: false
+};
 
+const _storageKey = "ragindex_user_id";
+
+/**
+ * Funzioni di utilità interne
+ */
+const _getUserId = function() {
+    let userId = localStorage.getItem(_storageKey);
+    if (!userId) {
+        userId = crypto.randomUUID();
+        localStorage.setItem(_storageKey, userId);
+    }
+    return userId;
+};
+
+const _getMetadata = function() {
+    return {
+        userAgent: navigator.userAgent,
+        timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+        language: navigator.language,
+        referrer: document.referrer,
+        urlParams: Object.fromEntries(new URLSearchParams(window.location.search)),
+        timestamp: Math.floor(Date.now() / 1000)
+    };
+};
+
+/**
+ * Il modulo esporta sia la funzione factory che i metodi diretti.
+ */
+export const UaSender = {
+    
     /**
-     * Genera o recupera un ID utente persistente.
+     * Configura l'URL del worker una volta per tutte.
      */
-    const _getUserId = function() {
-        let userId = localStorage.getItem(_storageKey);
-        
-        if (!userId) {
-            userId = crypto.randomUUID();
-            localStorage.setItem(_storageKey, userId);
+    init: function(config = {}) {
+        if (config.workerUrl) {
+            _globalConfig.workerUrl = config.workerUrl;
         }
-        
-        return userId;
-    };
+        _globalConfig.isInitialized = true;
+        console.log(`[RAGINDEX] Inizializzato con URL: ${_globalConfig.workerUrl}`);
+    },
 
     /**
-     * Raccoglie i metadati del browser.
+     * Invia un evento usando la configurazione globale.
      */
-    const _getMetadata = function() {
-        const metadata = {
-            userAgent: navigator.userAgent,
-            timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-            language: navigator.language,
-            referrer: document.referrer,
-            urlParams: Object.fromEntries(new URLSearchParams(window.location.search)),
-            timestamp: Math.floor(Date.now() / 1000)
-        };
-        return metadata;
-    };
-
-    // 3. FUNZIONI PUBBLICHE
-
-    /**
-     * Invia un evento al backend.
-     */
-    const sendEventAsync = async function(appName, actionName) {
-        // Fail Fast
+    sendEventAsync: async function(appName, actionName) {
         if (!appName || !actionName) {
-            console.error("UaSender.sendEventAsync: parametri mancanti");
+            console.error("UaSender: parametri mancanti");
             return null;
         }
 
         const payload = {
-            appName: appName,
-            actionName: actionName,
+            appName,
+            actionName,
             userId: _getUserId(),
             ..._getMetadata()
         };
 
-        let result = null;
-
         try {
-            const response = await fetch(`${_workerUrl}/api/analytics`, {
+            const response = await fetch(`${_globalConfig.workerUrl}/api/analytics`, {
                 method: "POST",
-                headers: {
-                    "Content-Type": "application/json"
-                },
+                headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
 
-            if (!response.ok) {
-                const errorData = await response.json();
-                throw new Error(errorData.error || "Errore server");
-            }
-
-            const data = await response.json();
-            result = data;
+            if (!response.ok) throw new Error("Errore server");
+            return await response.json();
         } catch (error) {
-            console.error("UaSender.sendEventAsync:", error);
-            result = null;
+            console.warn("UaSender: invio fallito (modalità silenziosa)", error);
+            return null;
         }
-
-        return result;
-    };
-
-    // 4. API PUBBLICA
-    const api = {
-        sendEventAsync: sendEventAsync
-    };
-    return api;
+    }
 };

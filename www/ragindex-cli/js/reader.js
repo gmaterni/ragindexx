@@ -1,26 +1,33 @@
 "use strict";
 
 /**
- * Gestore della lettura degli eventi analytics.
- * Si occupa di interrogare l'API per visualizzare i dati.
+ * Stato globale del modulo Reader (Singleton)
  */
-export const UaReader = function(config = {}) {
+let _globalConfig = {
+    workerUrl: "http://localhost:8788"
+};
+
+/**
+ * Gestore della lettura degli eventi analytics.
+ */
+export const UaReader = {
     
-    // 1. STATO PRIVATO
-    const _workerUrl = config.workerUrl || "http://localhost:8788";
-    
-    // 2. FUNZIONI PUBBLICHE
+    /**
+     * Inizializza la configurazione globale per la lettura.
+     */
+    init: function(config = {}) {
+        if (config.workerUrl) {
+            _globalConfig.workerUrl = config.workerUrl;
+        }
+    },
 
     /**
      * Recupera la lista degli ultimi eventi.
      */
-    const fetchEventsAsync = async function(filters = {}) {
-        let result = null;
-        
+    fetchEventsAsync: async function(filters = {}) {
         try {
-            const url = new URL(`${_workerUrl}/api/analytics`);
+            const url = new URL(`${_globalConfig.workerUrl}/api/analytics`);
             
-            // Applica filtri se presenti
             if (filters.limit) url.searchParams.append("limit", filters.limit);
             if (filters.appName) url.searchParams.append("appName", filters.appName);
             if (filters.actionName) url.searchParams.append("actionName", filters.actionName);
@@ -32,19 +39,10 @@ export const UaReader = function(config = {}) {
                 throw new Error("Errore nel recupero eventi");
             }
 
-            const data = await response.json();
-            result = data;
+            return await response.json();
         } catch (error) {
             console.error("UaReader.fetchEventsAsync:", error);
-            result = null;
+            return null;
         }
-
-        return result;
-    };
-
-    // 3. API PUBBLICA
-    const api = {
-        fetchEventsAsync: fetchEventsAsync
-    };
-    return api;
+    }
 };

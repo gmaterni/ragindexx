@@ -23,8 +23,13 @@ const UaApp = function() {
     const _config = {
         workerUrl: _getWorkerUrl()
     };
-    const _sender = UaSender(_config);
-    const _reader = UaReader(_config);
+
+    /**
+     * Inizializzazione di UaSender e UaReader.
+     * Entrambi usano ora il pattern Singleton per condividere l'URL del Worker.
+     */
+    UaSender.init({ workerUrl: _getWorkerUrl() });
+    UaReader.init({ workerUrl: _getWorkerUrl() });
 
     // Eventi per lo switch
     document.querySelectorAll('input[name="env"]').forEach(r => {
@@ -87,7 +92,8 @@ const UaApp = function() {
             filters.appName = appName;
         }
 
-        const events = await _reader.fetchEventsAsync(filters);
+        // Chiamata al metodo statico del Singleton UaReader
+        const events = await UaReader.fetchEventsAsync(filters);
         
         if (!events) {
             console.error("Errore caricamento eventi");
@@ -140,7 +146,11 @@ const UaApp = function() {
         _submitBtn.disabled = true;
         _submitBtn.textContent = "Invio in corso...";
 
-        const result = await _sender.sendEventAsync(appName, actionName);
+        /**
+         * Chiamata al metodo statico di UaSender.
+         * Essendo stato inizializzato con .init(), conosce già l'URL di destinazione.
+         */
+        const result = await UaSender.sendEventAsync(appName, actionName);
 
         _submitBtn.disabled = false;
         _submitBtn.textContent = "Invia Evento";
@@ -157,6 +167,10 @@ const UaApp = function() {
     // 3. INIZIALIZZAZIONE
     const init = async function() {
         _form.addEventListener("submit", _handleFormSubmit);
+
+        // Auto-log dell'apertura (T1: AUTO-LOGGING)
+        UaSender.sendEventAsync("ragindex-cli", "open")
+            .then(res => res && console.log("Apertura CLI registrata:", res.id));
         
         // Aggiorna tabella all'avvio
         await _refreshTableAsync();

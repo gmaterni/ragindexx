@@ -8,24 +8,28 @@ import { UaTable } from "./table.js";
  */
 const UaApp = function() {
     
-    // 1. STATO
+    // 1. STATO E CONFIG
     const _getWorkerUrl = function() {
         const env = localStorage.getItem("ragindex_env") || "local";
         const remoteBase = "https://ragindex.tuo-subdominio.workers.dev"; // Modifica solo qui
         
-        // Sincronizza UI esistente
-        if (_envToggle) _envToggle.checked = (env === "remote");
-        if (_urlDisplay) _urlDisplay.textContent = env === "local" ? "http://localhost:8788" : remoteBase;
+        // Sincronizza UI se presente (usiamo querySelector per evitare ReferenceError)
+        const radio = document.querySelector(`input[name="env"][value="${env}"]`);
+        if (radio) radio.checked = true;
+        
+        const urlDisplay = document.getElementById("current-url");
+        if (urlDisplay) {
+            urlDisplay.textContent = env === "local" ? "http://localhost:8788" : remoteBase;
+        }
 
         return env === "local" ? "http://localhost:8788" : remoteBase;
     };
 
-    const _config = {
-        workerUrl: "http://localhost:8788",
-        prodUrl: "https://ragindex.tuo-subdominio.workers.dev" // Modifica solo qui
-    };
+    const _workerUrl = _getWorkerUrl();
     
-    const _queryManager = UaQuery({ workerUrl: _getWorkerUrl() });
+    // Inizializzazione Singleton per le query
+    UaQuery.init({ workerUrl: _workerUrl });
+    
     const _tableManager = UaTable();
 
     // Elementi DOM
@@ -33,8 +37,6 @@ const UaApp = function() {
     const _executeBtn = document.getElementById("execute-btn");
     const _clearBtn = document.getElementById("clear-btn");
     const _errorDisplay = document.getElementById("error-display");
-    const _envToggle = document.getElementById("env-toggle");
-    const _urlDisplay = document.getElementById("current-url");
     const _presetBtns = document.querySelectorAll(".preset-query");
     const _dangerClearBtn = document.getElementById("danger-clear-btn");
 
@@ -48,10 +50,9 @@ const UaApp = function() {
         if (!confirmed) return;
 
         const SECRET_KEY = "ragindex-secret-clear-2026"; // Chiave di default locale
-        const url = _envToggle.checked ? _config.prodUrl : _config.workerUrl;
 
         try {
-            const response = await fetch(`${url}/api/analytics/clear`, {
+            const response = await fetch(`${_workerUrl}/api/analytics/clear`, {
                 method: "DELETE",
                 headers: {
                     "X-Clear-Key": SECRET_KEY
@@ -93,7 +94,8 @@ const UaApp = function() {
         _executeBtn.textContent = "Esecuzione...";
 
         try {
-            const result = await _queryManager.executeAsync(sql);
+            // Utilizzo del metodo statico del Singleton UaQuery
+            const result = await UaQuery.executeAsync(sql);
             if (result && result.results) {
                 _tableManager.render(result.results);
             }
@@ -108,9 +110,8 @@ const UaApp = function() {
     /**
      * Gestisce il cambio ambiente.
      */
-    const _handleEnvChange = function() {
-        const isProd = _envToggle.checked;
-        localStorage.setItem("ragindex_env", isProd ? "remote" : "local");
+    const _handleEnvChange = function(e) {
+        localStorage.setItem("ragindex_env", e.target.value);
         location.reload();
     };
 
@@ -139,8 +140,10 @@ const UaApp = function() {
             });
         });
 
-        // Environment switch
-        _envToggle.addEventListener("change", _handleEnvChange);
+        // Environment switch (Radio buttons)
+        document.querySelectorAll('input[name="env"]').forEach(r => {
+            r.addEventListener("change", _handleEnvChange);
+        });
 
         // Danger actions
         _dangerClearBtn.addEventListener("click", _clearDatabaseAsync);
