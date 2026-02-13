@@ -125,6 +125,14 @@ const UaApp = function() {
 
     // 3. INIZIALIZZAZIONE
     const init = function() {
+        // Auto-log dell'apertura
+        import("./sender.js").then(module => {
+            const sender = module.UaSender;
+            sender.init({ workerUrl: _workerUrl });
+            sender.sendEventAsync("ragindex-db", "open")
+                .then(res => res && console.log("Apertura DB Explorer registrata:", res.id));
+        });
+
         // Event Listeners
         _executeBtn.addEventListener("click", _runQueryAsync);
         
