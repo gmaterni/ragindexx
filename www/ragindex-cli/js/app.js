@@ -12,26 +12,28 @@ const UaApp = function() {
     const _getWorkerUrl = function() {
         const env = localStorage.getItem("ragindex_env") || "local";
         const remoteBase = "https://ragindex.workerua.workers.dev"; 
-        // XXX: Inserisci qui l'URL del tuo Worker Cloudflare
-        //https://ragindex.workerua.workers.dev
 
         // Sincronizza UI se presente
         const radio = document.querySelector(`input[name="env"][value="${env}"]`);
         if (radio) radio.checked = true;
 
+        const envDisplay = document.getElementById("env-display");
+        const urlDisplay = document.getElementById("worker-url-display");
+
+        if (envDisplay) envDisplay.textContent = env === "local" ? "Locale" : "Remoto";
+        if (urlDisplay) urlDisplay.textContent = env === "local" ? "http://localhost:8788" : remoteBase;
+
         return env === "local" ? "http://localhost:8788" : remoteBase;
     };
 
-    const _config = {
-        workerUrl: _getWorkerUrl()
-    };
+    const _workerUrl = _getWorkerUrl();
 
     /**
      * Inizializzazione di UaSender e UaReader.
      * Entrambi usano ora il pattern Singleton per condividere l'URL del Worker.
      */
-    UaSender.init({ workerUrl: _getWorkerUrl() });
-    UaReader.init({ workerUrl: _getWorkerUrl() });
+    UaSender.init({ workerUrl: _workerUrl });
+    UaReader.init({ workerUrl: _workerUrl });
 
     // Eventi per lo switch
     document.querySelectorAll('input[name="env"]').forEach(r => {

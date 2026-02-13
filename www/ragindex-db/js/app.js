@@ -57,7 +57,7 @@ const UaApp = function() {
         // Se sei in locale, usa la chiave di fallback
         const SECRET_KEY = env === "local" 
             ? "ragindex-secret-clear-2026" 
-            : "INSERISCI_QUI_LA_TUA_CHIAVE_DI_PRODUZIONE"; 
+            : "Mgiuseppe_0_"; 
 
         try {
             const response = await fetch(`${_workerUrl}/api/analytics/clear`, {

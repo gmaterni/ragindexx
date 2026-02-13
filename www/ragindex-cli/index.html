@@ -163,26 +163,23 @@
             background: #000;
             padding: 2px 6px;
             border-radius: 4px;
+            color: #4a9eff;
         }
     </style>
 </head>
 <body>
     <div style="position: fixed; top: 10px; right: 10px; background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #444; font-size: 0.8rem; z-index: 1000;">
         <label><input type="radio" name="env" value="local" checked> Locale</label>
-        <label style="margin-left: 10px;">
-            <input type="radio" name="env" value="remote"> Remoto </label>
+        <label style="margin-left: 10px;"><input type="radio" name="env" value="remote"> Remoto</label>
     </div>
 
     <main>
         <h1>RAGINDEX Test Client</h1>
 
         <div class="config-panel">
-            <span>Environment: <strong>Local</strong></span>
-            <span>URL: 
-            <span id="worker-url-display">http://localhost:8788</span>
-<!--<span id="worker-url-display">https://ragindex.workerua.workers.dev
-</span>-->
-            </span>
+            <span>Ambiente: <strong id="env-display" style="color: var(--accent);">Locale</strong></span>
+            <span style="margin-left: 10px;">|</span>
+            <span style="margin-left: 10px;">Worker URL: <code id="worker-url-display" style="color: var(--text-primary); background: #000; padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border);">http://localhost:8788</code></span>
         </div>
 
         <section class="card">
