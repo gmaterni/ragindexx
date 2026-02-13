@@ -11,8 +11,10 @@ const UaApp = function() {
     // 1. STATO E CONFIG
     const _getWorkerUrl = function() {
         const env = localStorage.getItem("ragindex_env") || "local";
-        const remoteBase = "https://ragindex.tuo-subdominio.workers.dev"; // Modifica solo qui
-        
+        const remoteBase = "https://ragindex.workerua.workers.dev"; 
+        // XXX: Inserisci qui l'URL del tuo Worker Cloudflare
+        //https://ragindex.workerua.workers.dev
+
         // Sincronizza UI se presente
         const radio = document.querySelector(`input[name="env"][value="${env}"]`);
         if (radio) radio.checked = true;

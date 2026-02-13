@@ -11,7 +11,8 @@ const UaApp = function() {
     // 1. STATO E CONFIG
     const _getWorkerUrl = function() {
         const env = localStorage.getItem("ragindex_env") || "local";
-        const remoteBase = "https://ragindex.tuo-subdominio.workers.dev"; // Modifica solo qui
+        const remoteBase = "https://ragindex.workerua.workers.dev"; 
+        // XXX: Inserisci qui l'URL del tuo Worker Cloudflare
         
         // Sincronizza UI se presente (usiamo querySelector per evitare ReferenceError)
         const radio = document.querySelector(`input[name="env"][value="${env}"]`);
@@ -49,7 +50,14 @@ const UaApp = function() {
         const confirmed = confirm("Sei sicuro di voler cancellare TUTTI gli eventi dal database?");
         if (!confirmed) return;
 
-        const SECRET_KEY = "ragindex-secret-clear-2026"; // Chiave di default locale
+        // Recupera l'ambiente attuale
+        const env = localStorage.getItem("ragindex_env") || "local";
+        
+        // Se sei in remoto, usa la chiave che hai impostato con 'wrangler secret put'
+        // Se sei in locale, usa la chiave di fallback
+        const SECRET_KEY = env === "local" 
+            ? "ragindex-secret-clear-2026" 
+            : "INSERISCI_QUI_LA_TUA_CHIAVE_DI_PRODUZIONE"; 
 
         try {
             const response = await fetch(`${_workerUrl}/api/analytics/clear`, {

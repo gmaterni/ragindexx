@@ -169,7 +169,8 @@
 <body>
     <div style="position: fixed; top: 10px; right: 10px; background: #1e1e1e; padding: 10px; border-radius: 8px; border: 1px solid #444; font-size: 0.8rem; z-index: 1000;">
         <label><input type="radio" name="env" value="local" checked> Locale</label>
-        <label style="margin-left: 10px;"><input type="radio" name="env" value="remote"> Remoto</label>
+        <label style="margin-left: 10px;">
+            <input type="radio" name="env" value="remote"> Remoto </label>
     </div>
 
     <main>
@@ -177,7 +178,11 @@
 
         <div class="config-panel">
             <span>Environment: <strong>Local</strong></span>
-            <span>URL: <span id="worker-url-display">http://localhost:8788</span></span>
+            <span>URL: 
+            <span id="worker-url-display">http://localhost:8788</span>
+<!--<span id="worker-url-display">https://ragindex.workerua.workers.dev
+</span>-->
+            </span>
         </div>
 
         <section class="card">
