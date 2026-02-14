@@ -181,11 +181,14 @@ const handlePostQuery = async function(request, env) {
  */
 const handleDeleteClear = async function(request, env) {
   const clearKey = request.headers.get("X-Clear-Key");
-  // Usa la chiave definita in env (produzione) o quella di fallback (locale)
   const SECRET_KEY = env.CLEAR_KEY || "ragindex-secret-clear-2026";
 
-  if (clearKey !== SECRET_KEY) {
-    const unauthorizedResponse = _createJsonResponse({ error: "Unauthorized" }, 401);
+  if (!clearKey || clearKey !== SECRET_KEY) {
+    console.error("handleDeleteClear: Chiave non valida o mancante");
+    const unauthorizedResponse = _createJsonResponse({ 
+      error: "Unauthorized", 
+      details: !clearKey ? "Header mancante" : "Chiave errata" 
+    }, 401);
     return unauthorizedResponse;
   }
 
