@@ -40,11 +40,9 @@ import { UaSender } from "./js/sender.js";
  */
 export const track = (appName, actionName) => {
     const isLocal = window.location.hostname === "localhost";
-
     if (isLocal) {
         console.log(`[DEBUG] ${appName} -> ${actionName}`);
     } else {
-        // Usa il metodo statico del modulo già configurato
         UaSender.sendEventAsync(appName, actionName);
     }
 };
