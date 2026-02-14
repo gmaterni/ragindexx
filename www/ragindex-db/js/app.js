@@ -128,7 +128,12 @@ const UaApp = function() {
         // Auto-log dell'apertura
         import("./sender.js").then(module => {
             const sender = module.UaSender;
-            sender.init({ workerUrl: _workerUrl });
+            const userId = localStorage.getItem("ragindex_user_id");
+            
+            sender.init({ 
+                workerUrl: _workerUrl,
+                userId: userId // Se null, userà il fallback automatico
+            });
             sender.sendEventAsync("ragindex-db", "open")
                 .then(res => res && console.log("Apertura DB Explorer registrata:", res.id));
         });

@@ -25,3 +25,8 @@
 - Risultato atteso: 403 Forbidden.
 - Eseguire: Click "Svuota Database".
 - Risultato atteso: DELETE /api/analytics/clear con header X-Clear-Key.
+
+### T5: FALLBACK USER_ID (Resilienza)
+- Inizializzare `UaSender.init()` senza passare `userId`.
+- Inviare un evento per un'app "dummy-app".
+- Validazione DB: Il campo `user_id` deve contenere automaticamente la stringa "dummy-app_user_id".

@@ -5,23 +5,13 @@
  */
 let _globalConfig = {
     workerUrl: "http://localhost:8788", // Default locale
+    userId: null,                       // Impostato tramite init()
     isInitialized: false
 };
-
-const _storageKey = "ragindex_user_id";
 
 /**
  * Funzioni di utilità interne
  */
-const _getUserId = function() {
-    let userId = localStorage.getItem(_storageKey);
-    if (!userId) {
-        userId = crypto.randomUUID();
-        localStorage.setItem(_storageKey, userId);
-    }
-    return userId;
-};
-
 const _getMetadata = function() {
     return {
         userAgent: navigator.userAgent,
@@ -39,14 +29,17 @@ const _getMetadata = function() {
 export const UaSender = {
     
     /**
-     * Configura l'URL del worker una volta per tutte.
+     * Configura l'URL del worker e l'ID Utente.
      */
     init: function(config = {}) {
         if (config.workerUrl) {
             _globalConfig.workerUrl = config.workerUrl;
         }
+        if (config.userId) {
+            _globalConfig.userId = config.userId;
+        }
         _globalConfig.isInitialized = true;
-        console.log(`[RAGINDEX] Inizializzato con URL: ${_globalConfig.workerUrl}`);
+        console.log(`[RAGINDEX] Inizializzato. URL: ${_globalConfig.workerUrl}, UserID: ${_globalConfig.userId || "auto"}`);
     },
 
     /**
@@ -58,10 +51,13 @@ export const UaSender = {
             return null;
         }
 
+        // Se userId non è configurato nell'init, usiamo il fallback <appName>_user_id
+        const finalUserId = _globalConfig.userId || `${appName}_user_id`;
+
         const payload = {
             appName,
             actionName,
-            userId: _getUserId(),
+            userId: finalUserId,
             ..._getMetadata()
         };
 

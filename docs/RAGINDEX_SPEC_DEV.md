@@ -23,7 +23,7 @@ Struttura del progetto basata su separazione Backend/Frontend.
 3. Avvio Frontend: `npx serve www` (o server statico equivalente su cartella /www)
 
 ## CONFIGURAZIONE AMBIENTE (localStorage)
-Le applicazioni utilizzano le seguenti chiavi in localStorage per mantenere lo stato:
-- `ragindex_env`: ["local", "remote"] - Determina l'URL base.
-- `ragindex_user_id`: [UUID] - Identificativo persistente dell'utente.
-- `ragindex_remote_url`: [URL] - Cache dell'URL di produzione (opzionale, dedotto da codice).
+Le applicazioni gestiscono lo stato tramite `localStorage`. `sender.js` è agnostico rispetto a questa persistenza e riceve i dati via `init()`:
+- `ragindex_env`: ["local", "remote"] - Determina l'URL base del Worker.
+- `ragindex_user_id`: [UUID] - Identificativo persistente dell'utente, gestito dall'App e passato a `UaSender.init()`.
+- `ragindex_remote_url`: [URL] - Cache dell'URL di produzione.

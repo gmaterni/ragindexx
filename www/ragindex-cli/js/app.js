@@ -26,13 +26,30 @@ const UaApp = function() {
         return env === "local" ? "http://localhost:8788" : remoteBase;
     };
 
+    /**
+     * Gestione dell'identità utente (spostata qui da sender.js)
+     */
+    const _getUserId = function() {
+        const key = "ragindex_user_id";
+        let userId = localStorage.getItem(key);
+        if (!userId) {
+            userId = crypto.randomUUID();
+            localStorage.setItem(key, userId);
+        }
+        return userId;
+    };
+
     const _workerUrl = _getWorkerUrl();
+    const _userId = _getUserId();
 
     /**
      * Inizializzazione di UaSender e UaReader.
      * Entrambi usano ora il pattern Singleton per condividere l'URL del Worker.
      */
-    UaSender.init({ workerUrl: _workerUrl });
+    UaSender.init({ 
+        workerUrl: _workerUrl,
+        userId: _userId 
+    });
     UaReader.init({ workerUrl: _workerUrl });
 
     // Eventi per lo switch

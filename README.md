@@ -28,13 +28,14 @@ Copia il file `sender.js` nel tuo progetto e importalo:
 ```javascript
 import { UaSender } from "./path/to/sender.js";
 
-// Configurazione (URL del tuo Worker Cloudflare)
+// Configurazione (URL e ID Utente opzionale)
 const config = {
-    workerUrl: "https://ragindex.tuo-subdominio.workers.dev"
+    workerUrl: "https://ragindex.tuo-subdominio.workers.dev",
+    userId: "utente_test_01" // Opzionale
 };
 
 // Inizializzazione
-const analytics = UaSender(config);
+UaSender.init(config);
 ```
 
 ### 3. Invio di un Evento
@@ -43,7 +44,9 @@ Per registrare un'azione, usa il metodo `sendEventAsync(appName, actionName)`:
 ```javascript
 // Esempio: Tracciamento click su un pulsante
 const trackClick = async function() {
-    const result = await analytics.sendEventAsync("mio-ecommerce", "aggiunta_carrello");
+    // Se userId non è stato impostato nell'init, 
+    // verrà usato "mio-ecommerce_user_id" come default.
+    const result = await UaSender.sendEventAsync("mio-ecommerce", "aggiunta_carrello");
     
     if (result) {
         console.log("Evento registrato con ID:", result.id);
