@@ -12,7 +12,7 @@ let _globalConfig = {
 /**
  * Funzioni di utilità interne
  */
-const _getMetadata = function() {
+const _getMetadata = function () {
     return {
         userAgent: navigator.userAgent,
         timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
@@ -27,11 +27,11 @@ const _getMetadata = function() {
  * Il modulo esporta sia la funzione factory che i metodi diretti.
  */
 export const UaSender = {
-    
+
     /**
      * Configura l'URL del worker e l'ID Utente.
      */
-    init: function(config = {}) {
+    init: function (config = {}) {
         if (config.workerUrl) {
             _globalConfig.workerUrl = config.workerUrl;
         }
@@ -45,12 +45,13 @@ export const UaSender = {
     /**
      * Invia un evento usando la configurazione globale.
      */
-    sendEventAsync: async function(appName, actionName) {
+    sendEventAsync: async function (appName, actionName) {
         if (!appName || !actionName) {
             console.error("UaSender: parametri mancanti");
             return null;
         }
-
+        // XXX annullamneto invio messaggi;
+        return null;
         // Se userId non è configurato nell'init, usiamo il fallback <appName>_user_id
         const finalUserId = _globalConfig.userId || `${appName}_user_id`;
 
