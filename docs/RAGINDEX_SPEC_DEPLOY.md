@@ -32,4 +32,6 @@ wrangler secret put CLEAR_KEY
 
 2. Valore atteso per operazioni DELETE: Header `X-Clear-Key`.
 
+##pages_url
+
 https://41e9bd82.ragindexx.pages.dev
