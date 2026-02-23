@@ -38,6 +38,7 @@ const UaApp = function() {
     const _errorDisplay = document.getElementById("error-display");
     const _dangerClearBtn = document.getElementById("danger-clear-btn");
     const _showAllColsBtn = document.getElementById("show-all-cols-btn");
+    const _deleteSelectedBtn = document.getElementById("delete-selected-btn");
     
     // Filtri
     const _filterApp = document.getElementById("filter-app");
@@ -174,6 +175,57 @@ const UaApp = function() {
     };
 
     /**
+     * Elimina le righe selezionate tramite API protetta.
+     */
+    const _deleteSelectedAsync = async function() {
+        const selectedIds = Array.from(_tableManager.getSelectedRows());
+        
+        if (selectedIds.length === 0) {
+            alert("Nessuna riga selezionata!");
+            return;
+        }
+
+        const confirmed = confirm(`Sei sicuro di voler eliminare ${selectedIds.length} righe selezionate?`);
+        if (!confirmed) return;
+
+        const env = localStorage.getItem("ragindex_env") || "local";
+        const SECRET_KEY = env === "local"
+            ? "ragindex-secret-clear-2026"
+            : "Mgiuseppe_0_";
+
+        try {
+            const response = await fetch(`${_workerUrl}/api/analytics/delete`, {
+                method: "POST",
+                headers: { 
+                    "X-Clear-Key": SECRET_KEY,
+                    "Content-Type": "application/json"
+                },
+                body: JSON.stringify({ ids: selectedIds })
+            });
+
+            const data = await response.json();
+            if (response.ok) {
+                alert(`Righe eliminate: ${data.deleted}`);
+                _tableManager.clearSelection();
+                _runQueryAsync(); // Ricarica i risultati
+                _loadFilterValuesAsync();
+            } else {
+                throw new Error(data.error || "Errore durante l'eliminazione");
+            }
+        } catch (error) {
+            _showError(`Errore eliminazione: ${error.message}`);
+        }
+    };
+
+    /**
+     * Aggiorna lo stato del pulsante Elimina in base alle selezioni.
+     */
+    const _updateDeleteButton = function() {
+        const count = _tableManager.getSelectedCount();
+        _deleteSelectedBtn.disabled = count === 0;
+    };
+
+    /**
      * Mostra un errore nella UI.
      */
     const _showError = function(message) {
@@ -280,6 +332,10 @@ const UaApp = function() {
 
         // Danger actions
         _dangerClearBtn.addEventListener("click", _clearDatabaseAsync);
+        _deleteSelectedBtn.addEventListener("click", _deleteSelectedAsync);
+
+        // Monitora selezione righe
+        setInterval(_updateDeleteButton, 500);
 
         console.log("RAGINDEX DB Explorer inizializzato.");
     };

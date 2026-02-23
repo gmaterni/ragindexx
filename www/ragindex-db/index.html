@@ -70,6 +70,13 @@
             color: var(--text-secondary);
             text-transform: uppercase;
             flex: 1;
+            cursor: help;
+            border-bottom: 1px dotted var(--text-secondary);
+        }
+
+        #show-all-cols-btn {
+            font-size: 20px;
+            filter: drop-shadow(0 0 4px rgba(0, 200, 83, 0.5));
         }
 
         /* Header in alto - fixed position */
@@ -240,6 +247,14 @@
             background-color: rgba(255, 255, 255, 0.05);
         }
 
+        tr.selected {
+            background-color: rgba(0, 200, 83, 0.15) !important;
+        }
+
+        tr.selected td {
+            color: var(--text-primary);
+        }
+
         /* Controlli sidebar */
         .filter-group, .sidebar-query-group {
             margin-bottom: 10px;
@@ -289,9 +304,13 @@
         }
 
         button.secondary {
-            background-color: var(--bg-primary);
+            background-color: #424242;
             color: var(--text-primary);
             border: 1px solid var(--border);
+        }
+
+        button.secondary:hover {
+            background-color: #555;
         }
 
         button.danger {
@@ -301,6 +320,22 @@
 
         button.danger:hover {
             background-color: #d32f2f;
+        }
+
+        button.danger:disabled {
+            background-color: #555;
+            color: #888;
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+
+        button.warning {
+            background-color: #ff9800;
+            color: #000;
+        }
+
+        button.warning:hover {
+            background-color: #ffb74d;
         }
 
         button.icon-btn {
@@ -327,12 +362,27 @@
         }
 
         .env-select {
-            padding: 6px 8px;
+            padding: 8px 12px;
             background-color: var(--bg-primary);
             color: var(--text-primary);
-            border: 1px solid var(--border);
-            border-radius: 4px;
-            font-size: 11px;
+            border: 2px solid var(--accent);
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            white-space: nowrap;
+        }
+
+        .env-select:hover {
+            border-color: var(--accent-hover);
+            box-shadow: 0 0 8px rgba(0, 200, 83, 0.3);
+        }
+
+        .env-select:focus {
+            outline: none;
+            border-color: var(--accent-hover);
+            box-shadow: 0 0 12px rgba(0, 200, 83, 0.5);
         }
     </style>
 </head>
@@ -340,8 +390,8 @@
 
     <aside>
         <div class="sidebar-toolbar">
-            <button id="show-all-cols-btn" class="icon-btn" title="Mostra tutte le colonne">👁</button>
-            <span class="toolbar-label">Colonne</span>
+            <button id="show-all-cols-btn" class="icon-btn" title="Mostra tutte le colonne: clicca per rendere visibili tutte le colonne nascoste">👁️</button>
+            <span class="toolbar-label" title="Usa i checkbox nell'header della tabella per mostrare/nascondere le colonne">Colonne</span>
         </div>
 
         <div class="sidebar-query-group">
@@ -381,16 +431,16 @@
 
     <header>
         <div class="header-group">
-            <label>Ambiente:</label>
-            <select id="env-select" class="env-select">
+            <select id="env-select" class="env-select" title="Cambia ambiente: Locale o Remoto">
                 <option value="local">Locale</option>
                 <option value="remote">Remoto</option>
             </select>
-            <span id="current-url" style="font-size: 10px; color: var(--text-secondary);">http://localhost:8788</span>
+            <span id="current-url" style="font-size: 10px; color: var(--text-secondary); white-space: nowrap;">http://localhost:8788</span>
         </div>
         <div class="header-actions">
             <button id="execute-btn">Esegui</button>
-            <button id="clear-btn" class="secondary">Pulisci</button>
+            <button id="clear-btn" class="secondary" title="Pulisci il risultato della query">Pulisci</button>
+            <button id="delete-selected-btn" class="warning" disabled title="Elimina le righe selezionate dalla tabella">✕ Elimina</button>
             <button id="danger-clear-btn" class="danger">Svuota DB</button>
         </div>
     </header>

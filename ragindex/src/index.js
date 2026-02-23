@@ -185,9 +185,9 @@ const handleDeleteClear = async function(request, env) {
 
   if (!clearKey || clearKey !== SECRET_KEY) {
     console.error("handleDeleteClear: Chiave non valida o mancante");
-    const unauthorizedResponse = _createJsonResponse({ 
-      error: "Unauthorized", 
-      details: !clearKey ? "Header mancante" : "Chiave errata" 
+    const unauthorizedResponse = _createJsonResponse({
+      error: "Unauthorized",
+      details: !clearKey ? "Header mancante" : "Chiave errata"
     }, 401);
     return unauthorizedResponse;
   }
@@ -198,6 +198,53 @@ const handleDeleteClear = async function(request, env) {
     result = _createJsonResponse({ success: true, deleted: dbResult.meta.rows_written });
   } catch (error) {
     console.error("handleDeleteClear: DB Error", error);
+    result = _createJsonResponse({ error: "Database error" }, 500);
+  }
+
+  return result;
+};
+
+/**
+ * Gestisce l'eliminazione di righe selezionate per ID.
+ */
+const handlePostDelete = async function(request, env) {
+  const clearKey = request.headers.get("X-Clear-Key");
+  const SECRET_KEY = env.CLEAR_KEY || "ragindex-secret-clear-2026";
+
+  if (!clearKey || clearKey !== SECRET_KEY) {
+    console.error("handlePostDelete: Chiave non valida o mancante");
+    const unauthorizedResponse = _createJsonResponse({
+      error: "Unauthorized",
+      details: !clearKey ? "Header mancante" : "Chiave errata"
+    }, 401);
+    return unauthorizedResponse;
+  }
+
+  let body = null;
+  try {
+    body = await request.json();
+  } catch (error) {
+    const errorResponse = _createJsonResponse({ error: "Invalid JSON" }, 400);
+    return errorResponse;
+  }
+
+  const ids = body.ids;
+  if (!ids || !Array.isArray(ids) || ids.length === 0) {
+    const invalidResponse = _createJsonResponse({ error: "Missing or empty 'ids' array" }, 400);
+    return invalidResponse;
+  }
+
+  // Costruisce la query DELETE con placeholders
+  const placeholders = ids.map(() => "?").join(", ");
+  const query = `DELETE FROM analytics WHERE id IN (${placeholders})`;
+
+  let result = null;
+  try {
+    const stmt = env.DB.prepare(query);
+    const dbResult = await stmt.bind(...ids).run();
+    result = _createJsonResponse({ success: true, deleted: dbResult.meta.rows_written });
+  } catch (error) {
+    console.error("handlePostDelete: DB Error", error);
     result = _createJsonResponse({ error: "Database error" }, 500);
   }
 
@@ -233,6 +280,10 @@ export default {
       if (id === "clear") {
         if (method === "DELETE") {
           response = await handleDeleteClear(request, env);
+        }
+      } else if (id === "delete") {
+        if (method === "POST") {
+          response = await handlePostDelete(request, env);
         }
       } else if (method === "GET") {
         response = await handleGetAnalyticsById(request, env, id);
